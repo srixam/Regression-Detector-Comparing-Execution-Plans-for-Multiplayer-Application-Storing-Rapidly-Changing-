@@ -36,11 +36,13 @@ class RootCauseEngine:
         rel_correlated = release_details.get("is_correlated", False) if release_details else False
         schema_change = release_details.get("schema_change", False) if release_details else False
 
-        # 1. Missing Index Root Cause
-        # High confidence if index is reported missing, or plan changed from Index Scan -> Seq Scan
-        if index_status == "missing" or (is_significant_plan and "Seq Scan" in plan_diff.get("diff_summary", "")):
+        # 1. Missing / Invalid Index Root Cause
+        # High confidence if index is reported missing/invalid, or plan changed from Index Scan -> Seq Scan
+        if index_status in ["missing", "invalid"] or (is_significant_plan and "Seq Scan" in plan_diff.get("diff_summary", "")):
             if rel_correlated and schema_change:
                 return "Missing index after schema deployment", 0.96
+            if index_status == "invalid":
+                return "Missing index or invalid index definition", 0.93
             return "Missing index or optimizer forced table scan", 0.92
 
         # 2. Stale Statistics / Cardinality Drift
@@ -49,9 +51,9 @@ class RootCauseEngine:
             return "Stale optimizer statistics or altered data distribution", 0.88
 
         # 3. Workload Spike / Resource Contention
-        # Execution plan remains identical, but latency increased under heavy load
-        if not plan_changed and (workload_lvl > 2.5 or features.get("p95", 0.0) > 60.0):
-            return "High query concurrency / workload surge", 0.91
+        # Execution plan remains identical, but latency increased under heavy load or concurrency
+        if not plan_changed and (workload_lvl > 2.0 or features.get("p95", 0.0) >= 35.0):
+            return "High query concurrency / buffer contention", 0.91
 
         # 4. Release Correlation without explicit plan regression
         if rel_correlated:
