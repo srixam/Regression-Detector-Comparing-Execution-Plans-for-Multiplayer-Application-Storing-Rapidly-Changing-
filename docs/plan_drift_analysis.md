@@ -1,6 +1,6 @@
 # PostgreSQL Live EXPLAIN Verification & Plan Drift Analysis
 
-**Generated**: 2026-10-05T05:45:45.080634+00:00  
+**Generated**: 2026-10-05T05:48:50.239720+00:00  
 **Target Engine**: `PostgreSQL 16 Planner Standard Emulator`  
 **Live PostgreSQL Path Exercised**: `STANDALONE (PostgreSQL 16 Standard Plan Tree Validation)`  
 
