@@ -38,6 +38,19 @@ class PlanComparator:
         b_meta = extract_plan_metrics(baseline_plan)
         c_meta = extract_plan_metrics(current_plan)
 
+        if c_meta.get("is_corrupted"):
+            return {
+                "plan_changed": False,
+                "is_significant_regression": False,
+                "plan_score_penalty": 0.0,
+                "diff_summary": "Corrupted Plan Telemetry Payload",
+                "human_readable_diff": "N/A (Malformed or corrupted plan payload)",
+                "baseline_metrics": b_meta,
+                "current_metrics": c_meta,
+                "cost_change_pct": 0.0,
+                "read_blocks_diff": 0
+            }
+
         plan_changed = (b_meta["plan_hash"] != c_meta["plan_hash"])
         b_node = b_meta["node_type"]
         c_node = c_meta["node_type"]
@@ -60,13 +73,17 @@ class PlanComparator:
         if b_idx != "none" and c_idx == "none" and b_node != c_node:
             penalty = max(penalty, 0.95)
 
+        # Disk spill penalty (Sort Space Type: Disk / external merge)
+        if c_meta.get("has_disk_spill"):
+            penalty = max(penalty, 0.75)
+
         # Cost explosion penalty even if node type matches
         if cost_change_pct > 200.0:
             penalty = max(penalty, 0.70)
         elif cost_change_pct > 50.0:
             penalty = max(penalty, 0.40)
 
-        is_significant = (penalty >= 0.60) or (plan_changed and cost_change_pct >= 100.0)
+        is_significant = (penalty >= 0.60) or (plan_changed and cost_change_pct >= 100.0) or c_meta.get("has_disk_spill", False)
 
         # Generate Human-Readable Diff
         diff_lines = [
@@ -100,6 +117,8 @@ class PlanComparator:
             diff_lines.append(f"  Cost Delta: {cost_change_pct:+.1f}%")
         if read_blocks_diff > 0:
             diff_lines.append(f"  I/O Degradation: Shared read blocks increased by +{read_blocks_diff}")
+        if c_meta.get("has_disk_spill"):
+            diff_lines.append("  DISK SPILL: Query memory exceeded work_mem; external merge sort on disk")
 
         summary = f"{b_node} -> {c_node}" if b_node != c_node else ("Subtree Changed" if plan_changed else "Plan Unchanged")
 

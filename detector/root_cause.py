@@ -50,15 +50,17 @@ class RootCauseEngine:
         if card_error >= 5.0 or (card_error >= 2.0 and stats_age > 12.0):
             return "Stale optimizer statistics or altered data distribution", 0.88
 
-        # 3. Workload Spike / Resource Contention
+        # 3. Release or Migration Rollback Correlation
+        if rel_correlated:
+            ver = release_details.get("version", "recent")
+            if release_details.get("is_rollback"):
+                return f"Transient operational instability following {ver}", 0.85
+            return f"Release-correlated regression following {ver}", 0.82
+
+        # 4. Workload Spike / Resource Contention
         # Execution plan remains identical, but latency increased under heavy load or concurrency
         if not plan_changed and (workload_lvl > 2.0 or features.get("p95", 0.0) >= 35.0):
             return "High query concurrency / buffer contention", 0.91
-
-        # 4. Release Correlation without explicit plan regression
-        if rel_correlated:
-            ver = release_details.get("version", "recent")
-            return f"Release-correlated regression following {ver}", 0.78
 
         # 5. Missing Telemetry Source Fallback
         if not has_plan:

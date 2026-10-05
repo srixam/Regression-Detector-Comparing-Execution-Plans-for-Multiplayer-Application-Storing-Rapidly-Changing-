@@ -9,14 +9,18 @@ import hashlib
 from typing import Dict, Any, Optional, Tuple
 from simulator.query_generator import QUERIES, generate_query_fingerprint
 
-def compute_plan_hash(plan_node: Dict[str, Any]) -> str:
+def compute_plan_hash(plan_node: Any) -> str:
     """
     Computes a deterministic hash of the plan structure based on operator types,
     relation names, and index names (ignoring transient runtime timings).
     """
+    if not isinstance(plan_node, dict):
+        return "corrupted_hash"
     elements = []
     
-    def walk(node: Dict[str, Any]):
+    def walk(node: Any):
+        if not isinstance(node, dict):
+            return
         node_type = node.get("Node Type", "Unknown")
         rel = node.get("Relation Name", "")
         idx = node.get("Index Name", "")
@@ -28,11 +32,31 @@ def compute_plan_hash(plan_node: Dict[str, Any]) -> str:
     canonical = "->".join(elements)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
 
-def extract_plan_metrics(plan_json: Dict[str, Any]) -> Dict[str, Any]:
+def extract_plan_metrics(plan_json: Any) -> Dict[str, Any]:
     """
     Extracts core metrics from PostgreSQL EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) structure.
+    Defensively handles malformed or corrupted plan payloads.
     """
+    if not isinstance(plan_json, dict):
+        return {
+            "node_type": "Corrupted / Malformed",
+            "relation": "",
+            "index_name": "none",
+            "startup_cost": 0.0,
+            "total_cost": 0.0,
+            "estimated_rows": 1.0,
+            "actual_rows": 1.0,
+            "actual_time_ms": 0.0,
+            "shared_hit_blocks": 0,
+            "shared_read_blocks": 0,
+            "plan_hash": "corrupted_plan",
+            "has_disk_spill": False,
+            "is_corrupted": True
+        }
+
     root = plan_json.get("Plan", plan_json)
+    if not isinstance(root, dict):
+        root = {}
     
     node_type = root.get("Node Type", "Unknown")
     relation = root.get("Relation Name", "")
@@ -45,17 +69,25 @@ def extract_plan_metrics(plan_json: Dict[str, Any]) -> Dict[str, Any]:
     hit_blocks = int(root.get("Shared Hit Blocks", 0))
     read_blocks = int(root.get("Shared Read Blocks", 0))
     
+    # Check for memory sort disk spills (e.g. Sort Space Type: Disk or external merge)
+    sort_space_type = root.get("Sort Space Type", "")
+    sort_method = root.get("Sort Method", "")
+    has_disk_spill = ("Disk" in sort_space_type) or ("external" in sort_method.lower())
+
     # If root doesn't have relation or index, look into its direct child
-    if not relation and "Plans" in root and len(root["Plans"]) > 0:
+    if not relation and "Plans" in root and isinstance(root["Plans"], list) and len(root["Plans"]) > 0:
         child = root["Plans"][0]
-        if not relation:
-            relation = child.get("Relation Name", "")
-        if not index_name:
-            index_name = child.get("Index Name", "")
-        if hit_blocks == 0:
-            hit_blocks = int(child.get("Shared Hit Blocks", 0))
-        if read_blocks == 0:
-            read_blocks = int(child.get("Shared Read Blocks", 0))
+        if isinstance(child, dict):
+            if not relation:
+                relation = child.get("Relation Name", "")
+            if not index_name:
+                index_name = child.get("Index Name", "")
+            if hit_blocks == 0:
+                hit_blocks = int(child.get("Shared Hit Blocks", 0))
+            if read_blocks == 0:
+                read_blocks = int(child.get("Shared Read Blocks", 0))
+            if not has_disk_spill:
+                has_disk_spill = ("Disk" in child.get("Sort Space Type", "")) or ("external" in child.get("Sort Method", "").lower())
 
     plan_hash = compute_plan_hash(root)
     
@@ -70,7 +102,9 @@ def extract_plan_metrics(plan_json: Dict[str, Any]) -> Dict[str, Any]:
         "actual_time_ms": actual_time,
         "shared_hit_blocks": hit_blocks,
         "shared_read_blocks": read_blocks,
-        "plan_hash": plan_hash
+        "plan_hash": plan_hash,
+        "has_disk_spill": has_disk_spill,
+        "is_corrupted": False
     }
 
 def get_baseline_plan(query_key_or_fp: str) -> Dict[str, Any]:
