@@ -1,0 +1,555 @@
+{
+  "get_active_player_session": {
+    "query_name": "Get Active Player Session",
+    "query_fingerprint": "fp_247bdcbf7634ada7",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Index Scan",
+        "Relation Name": "game_sessions",
+        "Index Name": "idx_player_session",
+        "Startup Cost": 0.28,
+        "Total Cost": 8.3,
+        "Plan Rows": 1,
+        "Plan Width": 142,
+        "Actual Startup Time": 0.021,
+        "Actual Total Time": 0.042,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Index Cond": "((player_id = $1) AND (status = 'active'::text))",
+        "Shared Hit Blocks": 4,
+        "Shared Read Blocks": 0
+      },
+      "Planning Time": 0.082,
+      "Execution Time": 0.051
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "update_session_state": {
+    "query_name": "Update Session State",
+    "query_fingerprint": "fp_15e555d438a9a570",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Update",
+        "Relation Name": "game_sessions",
+        "Startup Cost": 0.28,
+        "Total Cost": 8.3,
+        "Plan Rows": 1,
+        "Plan Width": 142,
+        "Actual Startup Time": 0.035,
+        "Actual Total Time": 0.078,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Plans": [
+          {
+            "Node Type": "Index Scan",
+            "Relation Name": "game_sessions",
+            "Index Name": "game_sessions_pkey",
+            "Startup Cost": 0.28,
+            "Total Cost": 8.3,
+            "Plan Rows": 1,
+            "Actual Total Time": 0.04,
+            "Actual Rows": 1,
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0
+          }
+        ]
+      },
+      "Planning Time": 0.095,
+      "Execution Time": 0.092
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "get_recent_game_events": {
+    "query_name": "Get Recent Game Events",
+    "query_fingerprint": "fp_f5555eb721d1cd18",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Limit",
+        "Startup Cost": 0.29,
+        "Total Cost": 25.4,
+        "Plan Rows": 50,
+        "Plan Width": 180,
+        "Actual Startup Time": 0.045,
+        "Actual Total Time": 0.32,
+        "Actual Rows": 50,
+        "Actual Loops": 1,
+        "Plans": [
+          {
+            "Node Type": "Index Scan",
+            "Relation Name": "game_events",
+            "Index Name": "idx_game_events_session_time",
+            "Startup Cost": 0.29,
+            "Total Cost": 25.4,
+            "Plan Rows": 50,
+            "Actual Total Time": 0.31,
+            "Actual Rows": 50,
+            "Shared Hit Blocks": 8,
+            "Shared Read Blocks": 0
+          }
+        ]
+      },
+      "Planning Time": 0.11,
+      "Execution Time": 0.345
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "region_leaderboard": {
+    "query_name": "Region Leaderboard",
+    "query_fingerprint": "fp_34583ca87cfa9d61",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Limit",
+        "Startup Cost": 0.29,
+        "Total Cost": 45.2,
+        "Plan Rows": 100,
+        "Plan Width": 48,
+        "Actual Startup Time": 0.052,
+        "Actual Total Time": 0.51,
+        "Actual Rows": 100,
+        "Actual Loops": 1,
+        "Plans": [
+          {
+            "Node Type": "Index Scan",
+            "Relation Name": "players",
+            "Index Name": "idx_players_region_skill",
+            "Startup Cost": 0.29,
+            "Total Cost": 45.2,
+            "Plan Rows": 100,
+            "Actual Total Time": 0.49,
+            "Actual Rows": 100,
+            "Shared Hit Blocks": 12,
+            "Shared Read Blocks": 0
+          }
+        ]
+      },
+      "Planning Time": 0.125,
+      "Execution Time": 0.54
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "get_active_sessions_on_server": {
+    "query_name": "Get Active Sessions On Server",
+    "query_fingerprint": "fp_594035bd2b5a106b",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Bitmap Heap Scan",
+        "Relation Name": "game_sessions",
+        "Index Name": "idx_sessions_server_status",
+        "Startup Cost": 4.35,
+        "Total Cost": 32.1,
+        "Plan Rows": 45,
+        "Plan Width": 142,
+        "Actual Startup Time": 0.06,
+        "Actual Total Time": 0.44,
+        "Actual Rows": 42,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 10,
+        "Shared Read Blocks": 0
+      },
+      "Planning Time": 0.09,
+      "Execution Time": 0.465
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "get_player_profile": {
+    "query_name": "Get Player Profile",
+    "query_fingerprint": "fp_b4748620272eddb4",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "Index Scan",
+        "Relation Name": "players",
+        "Index Name": "players_pkey",
+        "Startup Cost": 0.29,
+        "Total Cost": 8.3,
+        "Plan Rows": 1,
+        "Plan Width": 64,
+        "Actual Startup Time": 0.02,
+        "Actual Total Time": 0.038,
+        "Actual Rows": 1,
+        "Actual Loops": 1,
+        "Shared Hit Blocks": 3,
+        "Shared Read Blocks": 0
+      },
+      "Planning Time": 0.07,
+      "Execution Time": 0.045
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  },
+  "get_active_players_by_region": {
+    "query_name": "Get Active Players by Region",
+    "query_fingerprint": "fp_564783ecdbb2b287",
+    "baseline_plan": {
+      "Plan": {
+        "Node Type": "HashAggregate",
+        "Startup Cost": 35.5,
+        "Total Cost": 68.5,
+        "Plan Rows": 6,
+        "Plan Width": 40,
+        "Actual Startup Time": 0.42,
+        "Actual Total Time": 0.85,
+        "Actual Rows": 6,
+        "Actual Loops": 1,
+        "Plans": [
+          {
+            "Node Type": "Index Only Scan",
+            "Relation Name": "game_sessions",
+            "Index Name": "idx_player_session",
+            "Startup Cost": 0.28,
+            "Total Cost": 32.5,
+            "Plan Rows": 900,
+            "Actual Total Time": 0.65,
+            "Actual Rows": 890,
+            "Shared Hit Blocks": 22,
+            "Shared Read Blocks": 0
+          }
+        ]
+      },
+      "Planning Time": 0.115,
+      "Execution Time": 0.88
+    },
+    "regressed_plans": {
+      "index_removed": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "game_sessions",
+          "Index Name": "none",
+          "Startup Cost": 0.0,
+          "Total Cost": 485.0,
+          "Plan Rows": 1,
+          "Plan Width": 142,
+          "Actual Startup Time": 12.45,
+          "Actual Total Time": 191.4,
+          "Actual Rows": 1,
+          "Actual Loops": 1,
+          "Filter": "((player_id = $1) AND (status = 'active'::text))",
+          "Rows Removed by Filter": 1499,
+          "Shared Hit Blocks": 185,
+          "Shared Read Blocks": 45
+        },
+        "Planning Time": 0.065,
+        "Execution Time": 191.52
+      },
+      "stale_statistics": {
+        "Plan": {
+          "Node Type": "Nested Loop",
+          "Startup Cost": 0.58,
+          "Total Cost": 9820.0,
+          "Plan Rows": 100,
+          "Plan Width": 142,
+          "Actual Startup Time": 5.2,
+          "Actual Total Time": 240.5,
+          "Actual Rows": 45000,
+          "Actual Loops": 1,
+          "Shared Hit Blocks": 4200,
+          "Shared Read Blocks": 680,
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "players",
+              "Startup Cost": 0.0,
+              "Total Cost": 250.0,
+              "Plan Rows": 100,
+              "Actual Rows": 45000
+            }
+          ]
+        },
+        "Planning Time": 0.45,
+        "Execution Time": 241.1
+      }
+    }
+  }
+}
