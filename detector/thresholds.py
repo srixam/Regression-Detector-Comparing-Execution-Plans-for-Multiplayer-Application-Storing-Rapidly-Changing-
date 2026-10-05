@@ -14,6 +14,7 @@ class DetectorConfig:
         
         # Persistence requirement (number of consecutive windows)
         self.persistence_windows = int(os.getenv("THRESHOLD_PERSISTENCE_WINDOWS", "3"))
+        self.warning_persistence_windows = int(os.getenv("THRESHOLD_WARNING_PERSISTENCE_WINDOWS", "2"))
 
         # Cardinality error threshold
         self.cardinality_error_threshold = float(os.getenv("CARDINALITY_ERROR_THRESHOLD", "2.0"))
@@ -45,6 +46,7 @@ class DetectorConfig:
             "latency_high_pct": self.latency_high_pct,
             "latency_critical_pct": self.latency_critical_pct,
             "persistence_windows": self.persistence_windows,
+            "warning_persistence_windows": self.warning_persistence_windows,
             "cardinality_error_threshold": self.cardinality_error_threshold,
             "weights": {
                 "latency": self.weight_latency,

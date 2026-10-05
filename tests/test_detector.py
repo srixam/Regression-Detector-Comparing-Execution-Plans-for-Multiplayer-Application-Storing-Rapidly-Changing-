@@ -83,3 +83,36 @@ def test_root_cause_missing_index():
     rc, conf = root_cause_engine.determine_root_cause(features, plan_diff, score_details, release_details)
     assert "Missing index" in rc
     assert conf >= 0.90
+
+def test_warning_requires_persistence_on_pure_jitter():
+    baseline = {"baseline_p95": 25.0}
+    # 22% latency jitter with no plan change and healthy index
+    features = {
+        "p95": 30.5, "has_plan_source": True, "has_release_source": True,
+        "index_status": "active", "cardinality_error": 0.0, "workload_level": 1.0,
+        "release_correlated": False
+    }
+    plan_diff = {"plan_changed": False, "plan_score_penalty": 0.0, "is_significant_regression": False}
+
+    # First window: transient jitter should remain NORMAL
+    res_w1 = scorer.compute_score(baseline, features, plan_diff, persistence_count=1)
+    assert res_w1["severity"] == Severity.NORMAL
+    assert res_w1["regression_score"] < 30.0
+
+    # Second window: persistent jitter escalates to WARNING
+    res_w2 = scorer.compute_score(baseline, features, plan_diff, persistence_count=2)
+    assert res_w2["severity"] == Severity.WARNING
+
+def test_warning_triggers_immediately_on_structural_change():
+    baseline = {"baseline_p95": 25.0}
+    # 22% latency increase with index delayed/missing (structural issue)
+    features = {
+        "p95": 30.5, "has_plan_source": True, "has_release_source": True,
+        "index_status": "delayed", "cardinality_error": 0.0, "workload_level": 1.0,
+        "release_correlated": False
+    }
+    plan_diff = {"plan_changed": False, "plan_score_penalty": 0.0, "is_significant_regression": False}
+
+    # Triggers WARNING immediately on first window due to structural signal
+    res = scorer.compute_score(baseline, features, plan_diff, persistence_count=1)
+    assert res["severity"] == Severity.WARNING

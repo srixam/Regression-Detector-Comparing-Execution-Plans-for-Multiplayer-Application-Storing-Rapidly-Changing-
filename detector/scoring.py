@@ -126,8 +126,18 @@ class RegressionScorer:
         # WARNING: p95 increase >= 20%
         # HIGH: p95 increase >= 50% and persists for at least 3 windows
         # CRITICAL: p95 increase >= 100% AND significant plan regression
+        # Check if there is an explicit structural or environmental indicator
+        has_structural_indicator = (
+            plan_diff.get("plan_changed", False)
+            or (index_status != "active")
+            or (card_error >= config.cardinality_error_threshold)
+            or rel_corr
+            or (workload_lvl > 2.0)
+            or (not has_plan)
+        )
+
         is_critical_rule = (latency_change_pct >= config.latency_critical_pct and plan_diff.get("is_significant_regression", False))
-        
+
         if is_critical_rule or final_score >= config.score_critical_cutoff:
             severity = Severity.CRITICAL
             final_score = max(final_score, 82.0)
@@ -135,7 +145,12 @@ class RegressionScorer:
             severity = Severity.HIGH
             final_score = max(final_score, 62.0)
         elif latency_change_pct >= config.latency_warning_pct or final_score >= config.score_warning_cutoff:
-            severity = Severity.WARNING
+            # Require 2 consecutive windows for warning persistence when plan/index are unchanged (pure transient jitter)
+            if has_structural_indicator or persistence_count >= config.warning_persistence_windows:
+                severity = Severity.WARNING
+            else:
+                severity = Severity.NORMAL
+                final_score = min(final_score, config.score_warning_cutoff - 1.0)
         else:
             severity = Severity.NORMAL
 

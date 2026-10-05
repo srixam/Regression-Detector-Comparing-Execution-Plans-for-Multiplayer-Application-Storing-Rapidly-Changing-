@@ -57,6 +57,7 @@ class EvaluationFramework:
         # 6. Missing plan source (Regression)
 
         for i in range(num_scenarios):
+            detector.clear_alerts()
             q_key = rng.choice(query_keys)
             q_fp = KEY_TO_FINGERPRINT[q_key]
 
@@ -126,13 +127,13 @@ class EvaluationFramework:
                 alert = detector.evaluate_query(q_fp, features, plan, plan)
 
             elif scenario_type == "minor_jitter":
-                # Latency increased only 12% - should be NORMAL
+                # Latency increased ~22% (transient single-window jitter) - classified as NORMAL due to 2-window persistence check
                 is_reg = False
                 expected_sev = "NORMAL"
                 raw = workload_gen.generate_executions(count=60, mode="normal", regressed_query_key=q_key)
-                # Inject 10-15% duration bump
+                # Inject 22% duration jitter
                 for r in raw:
-                    r["duration_ms"] *= 1.12
+                    r["duration_ms"] *= 1.22
                 norm = normalizer.normalize_batch(raw)
                 plan = get_baseline_plan(q_key)
                 meta = extract_plan_metrics(plan)
